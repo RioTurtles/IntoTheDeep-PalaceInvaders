@@ -30,6 +30,7 @@ public class TeleOpRed_v1 extends LinearOpMode { // TODO: WRITE RIGGING
         TRANSFER,
         HIGH_BASKET_1,
         HIGH_BASKET_2,
+        HIGH_BASKET_3,
         SPECIMEN_INTAKE,
         GRABBED_SPECIMEN,
         PREPARE_CHAMBER_1,
@@ -87,6 +88,7 @@ public class TeleOpRed_v1 extends LinearOpMode { // TODO: WRITE RIGGING
                     robot.clawOpen();
                     robot.setClawPitchPos(ClawPitchPosition.TRANSFER);
                     robot.setArmPos(ArmPosition.TRANSFER);
+                    robot.setVSliderPos(VSliderPosition.DOWN, vSliderPower);
 
                     if (rb) {
                         state = State.SAMPLE_INTAKE;
@@ -140,6 +142,7 @@ public class TeleOpRed_v1 extends LinearOpMode { // TODO: WRITE RIGGING
 
                     break;
                 case SUCKED_SAMPLE:
+                    robot.setIntakePitchPos(IntakePitchPosition.DOWN);
                     robot.setIntakeMode(IntakeMode.STOP);
                     robot.setIntakeArmPos(IntakeArmPosition.UP);
 
@@ -183,22 +186,45 @@ public class TeleOpRed_v1 extends LinearOpMode { // TODO: WRITE RIGGING
 
                     break;
                 case TRANSFER: // TODO
+                    robot.clawOpen();
                     robot.setIntakePitchPos(IntakePitchPosition.UP);
                     robot.setHSliderPos(HSliderPosition.IN);
 
-                    if (rb) {
-                        state = State.HIGH_BASKET_1;}
+                    if (rb) {state = State.HIGH_BASKET_1;}
+                    if (lb) {state = State.SUCKED_SAMPLE;}
 
                     if (gamepad.cross || operator.cross) {isBasket = false;}
                     if (gamepad.triangle || operator.triangle) {isBasket = true;}
 
                     break;
                 case HIGH_BASKET_1: // TODO
+                    robot.clawClose();
+
+                    if (rb) {state = State.HIGH_BASKET_2;}
+                    if (lb) {state = State.TRANSFER;}
+
                     if (gamepad.cross || operator.cross) {isBasket = false;}
                     if (gamepad.triangle || operator.triangle) {isBasket = true;}
 
                     break;
                 case HIGH_BASKET_2: // TODO
+                    robot.clawClose();
+                    robot.setVSliderPos(VSliderPosition.HIGH_BASKET, vSliderPower);
+                    robot.setArmPos(ArmPosition.HIGH_BASKET);
+
+                    if (rb) {state = State.HIGH_BASKET_3;}
+                    if (lb) {robot.clawOpen(); state = State.INIT;}
+
+                    if (gamepad.cross || operator.cross) {isBasket = false;}
+                    if (gamepad.triangle || operator.triangle) {isBasket = true;}
+
+                    break;
+                case HIGH_BASKET_3:
+                    robot.clawOpen();
+
+                    if (rb) {state = State.INIT;}
+                    if (lb) {state = State.HIGH_BASKET_3;}
+
                     if (gamepad.cross || operator.cross) {isBasket = false;}
                     if (gamepad.triangle || operator.triangle) {isBasket = true;}
 
@@ -262,13 +288,13 @@ public class TeleOpRed_v1 extends LinearOpMode { // TODO: WRITE RIGGING
                     break;
             }
 
-            if (operator.touchpad && !lastOperator.touchpad) { // TODO
-                if (state == state.FAILSAFE) {
-                    state = State.INIT;
-                } else {
-                    state = State.FAILSAFE;
-                }
-            }
+//            if (operator.touchpad && !lastOperator.touchpad) { // TODO
+//                if (state == state.FAILSAFE) {
+//                    state = State.INIT;
+//                } else {
+//                    state = State.FAILSAFE;
+//                }
+//            }
 
             if (operator.right_trigger > 0) autoAlignTarget = 0.0; // High basket allignment TODO
             else if (operator.left_bumper) autoAlignTarget = 0.0;  // Submersible or High chamber alignment TODO
