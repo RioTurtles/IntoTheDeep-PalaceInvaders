@@ -17,7 +17,7 @@ public class Project1Hardware {
     DcMotorEx frontLeft, frontRight, backLeft, backRight, vSliderL, vSliderR;
     Servo intakeArm, intakePitch, claw, clawPitch, armL, armR, hSliderL, hSliderR;
     CRServo intake;
-    ColorRangeSensor colorRangeSensor; // TODO
+//    ColorRangeSensor colorRangeSensor; // TODO
     IMU imu;
     HardwareMap hwmap;
     public Project1Hardware(HardwareMap hardwareMap) {
@@ -48,7 +48,7 @@ public class Project1Hardware {
 
         imu = hardwareMap.get(IMU.class, "imu");
 
-        colorRangeSensor = hardwareMap.get(ColorRangeSensor.class, "colorRangeSensor");
+//        colorRangeSensor = hardwareMap.get(ColorRangeSensor.class, "colorRangeSensor");
 
         frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -86,25 +86,25 @@ public class Project1Hardware {
         vSliderL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         vSliderR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         vSliderL.setDirection(DcMotor.Direction.FORWARD); // TODO: CHECK DIRECTION
-        vSliderR.setDirection(DcMotor.Direction.FORWARD); // TODO: CHECK DIRECTION
-        vSliderL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        vSliderR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        vSliderR.setDirection(DcMotor.Direction.REVERSE); // TODO: CHECK DIRECTION
+        vSliderL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        vSliderR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        //Reset
-        setIntakeMode(IntakeMode.STOP);
-        setIntakeArmPos(IntakeArmPosition.UP);
-        setIntakePitchPos(IntakePitchPosition.UP);
-        setHSliderPos(HSliderPosition.IN);
-        clawOpen();
-        setClawPitchPos(ClawPitchPosition.TRANSFER);
-        setVSliderPos(VSliderPosition.DOWN, 1.0);
-        setArmPos(ArmPosition.TRANSFER);
+//        //Reset
+//        setIntakeMode(IntakeMode.STOP);
+//        setIntakeArmPos(IntakeArmPosition.INIT);
+//        setIntakePitchPos(IntakePitchPosition.INIT);
+//        setHSliderPos(HSliderPosition.IN);
+//        clawOpen();
+//        setClawPitchPos(ClawPitchPosition.TRANSFER);
+//        setVSliderPos(VSliderPosition.DOWN, 1.0);
+//        setArmPos(ArmPosition.INIT);
 
         imu.initialize(
                 new IMU.Parameters(
                         new RevHubOrientationOnRobot(
-                                RevHubOrientationOnRobot.LogoFacingDirection.UP, // TODO: CHECK DIRECTION
-                                RevHubOrientationOnRobot.UsbFacingDirection.LEFT // TODO: CHECK DIRECTION
+                                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
                         )
                 )
         );
@@ -128,39 +128,48 @@ public class Project1Hardware {
 
     public enum IntakeArmPosition {
         INIT,
+        TRANSFER,
         UP,
+        RELEASE,
         DOWN
     }
 
     public void setIntakeArmPos(IntakeArmPosition position) {
         switch (position) {
             case INIT: intakeArm.setPosition(0); break;
-            case UP: intakeArm.setPosition(0.3); break;
-            case DOWN: intakeArm.setPosition(0.745); break;
+            case TRANSFER: intakeArm.setPosition(0.05); break;
+            case UP: intakeArm.setPosition(0.33); break;
+            case RELEASE: intakeArm.setPosition(0.48); break;
+            case DOWN: intakeArm.setPosition(0.53); break;
         }
     }
 
     public enum IntakePitchPosition {
-        UP,
-        DOWN,
-        TRANSFER
+        INIT,
+        FLAT,
+        TRANSFER,
+        INTAKE,
+        RELEASE
     }
 
     public void setIntakePitchPos(IntakePitchPosition position) {
         switch (position) {
-            case UP: intakePitch.setPosition(0); break;
-            case DOWN: intakePitch.setPosition(0.02); break;
-            case TRANSFER: intakePitch.setPosition(0.05); break; // TODO: DOUBLE-CHECK POSITION
+            case INIT: intakePitch.setPosition(0); break;
+            case FLAT: intakePitch.setPosition(0.25); break;
+            case TRANSFER: intakePitch.setPosition(0); break;
+            case INTAKE: intakePitch.setPosition(0.29); break;
+            case RELEASE: intakePitch.setPosition(0.33); break;
         }
     }
 
     public void clawCompleteOpen() {claw.setPosition(0);}
 
-    public void clawOpen() {claw.setPosition(0.12);}
+    public void clawOpen() {claw.setPosition(0.15);}
     public void clawClose() {claw.setPosition(0.27);}
 
     public enum ClawPitchPosition {
         TRANSFER,
+        HIGH_CHAMBER_READY,
         HIGH_CHAMBER,
         HIGH_BASKET,
         SPECIMEN,
@@ -168,18 +177,17 @@ public class Project1Hardware {
 
     public void setClawPitchPos(ClawPitchPosition position) {
         switch (position) {
-            case TRANSFER: clawPitch.setPosition(0.04); break;
-            case HIGH_CHAMBER: clawPitch.setPosition(0.1); break; // TODO: CHECK POSITION
-            case HIGH_BASKET: clawPitch.setPosition(0.2); break; // TODO: CHECK POSITION
-            case SPECIMEN: clawPitch.setPosition(1); break; // TODO: CHECK POSITION
-
+            case TRANSFER: clawPitch.setPosition(0.009); break;
+            case HIGH_CHAMBER_READY: clawPitch.setPosition(0.1); break; // TODO: CHECK POSITION
+            case HIGH_CHAMBER: clawPitch.setPosition(0); break; // CHECK POSITION
+            case HIGH_BASKET: clawPitch.setPosition(0.3); break;
+            case SPECIMEN: clawPitch.setPosition(0.15); break;
         }
     }
 
     public enum ArmPosition {
         INIT,
         TRANSFER,
-        HIGH_CHAMBER,
         HIGH_BASKET,
         SPECIMEN_UP,
         SPECIMEN
@@ -192,24 +200,20 @@ public class Project1Hardware {
                 armR.setPosition(0);
                 break;
             case TRANSFER:
-                armL.setPosition(0.1); // TODO: CHECK POSITION
-                armR.setPosition(0.1); // TODO: CHECK POSITION
-                break;
-            case HIGH_CHAMBER:
-                armL.setPosition(0.3); // TODO: CHECK POSITION
-                armR.setPosition(0.3); // TODO: CHECK POSITION
+                armL.setPosition(0.029);
+                armR.setPosition(0.029);
                 break;
             case HIGH_BASKET:
-                armL.setPosition(0.6); // TODO: CHECK POSITION
-                armR.setPosition(0.6); // TODO: CHECK POSITION
+                armL.setPosition(0.33);
+                armR.setPosition(0.33);
                 break;
             case SPECIMEN_UP:
-                armL.setPosition(0.9); // TODO: CHECK POSITION
-                armR.setPosition(0.9); // TODO: CHECK POSITION
+                armL.setPosition(0.48);
+                armR.setPosition(0.48);
                 break;
             case SPECIMEN:
-                armL.setPosition(1); // TODO: CHECK POSITION
-                armR.setPosition(1); // TODO: CHECK POSITION
+                armL.setPosition(0.53);
+                armR.setPosition(0.53);
                 break;
         }
     }
@@ -231,8 +235,8 @@ public class Project1Hardware {
                 vSliderR.setTargetPosition(500); // TODO: CHECK POSITION
                 break;
             case HIGH_BASKET:
-                vSliderL.setTargetPosition(1000); // TODO: CHECK POSITION
-                vSliderR.setTargetPosition(1000); // TODO: CHECK POSITION
+                vSliderL.setTargetPosition(3000); // TODO: CHECK POSITION
+                vSliderR.setTargetPosition(3000); // TODO: CHECK POSITION
                 break;
         }
         vSliderL.setPower(vSliderPower);
@@ -259,40 +263,38 @@ public class Project1Hardware {
     }
     HSliderState hSliderState = HSliderState.IN;
 
-    public void setHSliderPos(HSliderPosition position) {
+    public void setHSliderPos(HSliderPosition position) { // TODO
         switch (position) {
             case IN:
                 hSliderL.setPosition(0);
                 hSliderR.setPosition(0);
+                hSliderState = HSliderState.OUT_1;
+
                 break;
             case OUT:
                 switch (hSliderState) {
-                    case IN:
-                        hSliderL.setPosition(0.2); // TODO: CHECK POSITION
-                        hSliderR.setPosition(0.2); // TODO: CHECK POSITION
-                        hSliderState = HSliderState.OUT_1;
-
-                        break;
                     case OUT_1:
-                        hSliderL.setPosition(0.3); // TODO: CHECK POSITION
-                        hSliderR.setPosition(0.3); // TODO: CHECK POSITION
+                        hSliderL.setPosition(0.11);
+                        hSliderR.setPosition(0.11);
                         hSliderState = HSliderState.OUT_2;
 
                         break;
                     case OUT_2:
-                        hSliderL.setPosition(0.4); // TODO: CHECK POSITION
-                        hSliderR.setPosition(0.4); // TODO: CHECK POSITION
+                        hSliderL.setPosition(0.22);
+                        hSliderR.setPosition(0.22);
                         hSliderState = HSliderState.OUT_3;
 
                         break;
                     case OUT_3:
-                        hSliderL.setPosition(0.5); // TODO: CHECK POSITION
-                        hSliderR.setPosition(0.5); // TODO: CHECK POSITION
+                        hSliderL.setPosition(0.33);
+                        hSliderR.setPosition(0.33);
 
                         break;
                 }
+
                 break;
         }
+
     }
 
     public enum SampleColor {
@@ -302,17 +304,17 @@ public class Project1Hardware {
         UNKNOWN
     }
 
-    public SampleColor getSampleColor() {
-        NormalizedRGBA color = colorRangeSensor.getNormalizedColors();
-        double lightDetected = colorRangeSensor.getLightDetected();
-
-        if (lightDetected >= 0.9) { // TODO: CHECK DETECTION
-            if (color.red >= 0.9) {return SampleColor.RED;} else
-            if (color.blue > 0.9) {return SampleColor.BLUE;} else
-                return SampleColor.YELLOW;
-
-        } else return SampleColor.UNKNOWN;
-
-    }
+//    public SampleColor getSampleColor() {
+//        NormalizedRGBA color = colorRangeSensor.getNormalizedColors();
+//        double lightDetected = colorRangeSensor.getLightDetected();
+//
+//        if (lightDetected >= 0.9) { // TODO: CHECK DETECTION
+//            if (color.red >= 0.9) {return SampleColor.RED;} else
+//            if (color.blue > 0.9) {return SampleColor.BLUE;} else
+//                return SampleColor.YELLOW;
+//
+//        } else return SampleColor.UNKNOWN;
+//
+//    }
 
 }
